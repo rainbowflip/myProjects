@@ -1,0 +1,79 @@
+# -*- coding:utf-8 -*-
+from django.shortcuts import render,HttpResponse
+from django.http import JsonResponse
+import json
+import datetime
+from datetime import timedelta, timezone
+#import requests
+#import re
+import hashlib
+import time
+import os
+import sys
+sys.path.append("/bigdata/gemfield/github/semantic-segmentation-pytorch/")
+from .models import *
+from django.views.decorators.csrf import csrf_exempt
+#from collections import OrderedDict
+from django.http import FileResponse,StreamingHttpResponse
+import xu_test as xu_test
+import base64
+import numpy as np
+import cv2
+'''
+code: 0 success
+code: 1 wrong
+code: 2 other reson 
+'''
+static_dir = "/bigdata/gemfield/django/static/images/"
+
+def readFile(filebytes,chunk_size=512):
+    while True:
+        c=filebytes.read(chunk_size)
+        if c:
+            yield c
+        else:
+            break
+
+@csrf_exempt
+def faceswap(request):
+    #try:
+    print(dir(request.body))
+    print(type(request.body))
+    print(request.method)
+    if request.method != "POST":
+        return JsonResponse({"status":"1","msg":"Error: your method must be POST!"})
+    imageinfo = np.fromstring(request.POST.get("fileinfo"), np.uint8)
+    #imageinfo = request.FILES.get("imageinfo").read()
+    #filename = request.POST.get("filename")
+    #imageinfo = np.frombuffer(request.body, np.uint8)
+    print(type(imageinfo))
+    print(imageinfo.shape)
+    img_array = cv2.imdecode(imageinfo, cv2.COLOR_BGR2RGB) 
+    print("img_array",img_array)
+    print("type(img_array)",type(img_array))
+    print(img_array.shape)
+    imgmax = max(img_array.shape[0],img_array.shape[1])
+    if imgmax > 1024:
+        scale = imgmax / 1024.0
+        w_size = int(img_array.shape[1] / scale)
+        h_size = int(img_array.shape[0] / scale)
+        img_array = cv2.resize(img_array, (w_size,h_size))
+    print("--------",img_array.shape)
+    resimg = xu_test.run_seg(img_array)
+    #cv2.imwrite("{}{}.jpg".format(static_dir,time.time()),resimg)
+    response = None
+    if resimg is None:
+        response = JsonResponse({"status":"2","msg":"no faces detected!"})
+    else:
+        resimgbytes = cv2.imencode('.jpg', resimg)[1]
+        response = StreamingHttpResponse(readFile(resimgbytes))
+        print("-0-0-0-0-0",dir(response))
+        response['Content-Type']='application/octet-stream'
+        response['Content-Disposition']='attachment;filename="{0}"'.format(filename)
+
+    #except Exception as e:
+
+    #    print("------Exception---------")
+    #finally:
+    response["Access-Control-Allow-Origin"] = "*" 
+    return response

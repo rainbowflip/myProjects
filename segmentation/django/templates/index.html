@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh_cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.bootcss.com/exif-js/2.3.0/exif.min.js"></script> 
+    <script src="/static/js/index.js"></script>
+    <style>
+        .header,.bottom{
+            overflow:hidden;
+            width:50%;
+            float:left;
+        }
+        /*#video,#canvas,#tempalte,#result{
+            float:left;
+            display:block;
+        }*/
+        #origin,#result{
+            background-position: top;
+            background-repeat: no-repeat;
+            background-size: contain;
+            height:400px;
+            width:100%;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <input type="file" accept="image/*" id="choosefile" value="选择文件"/>
+    <button id="start">start</button>
+    <!--<button id="interval">startinterval</button>
+    <button id="stopinterval">stopinterval</button>-->
+</div>
+<div class="header">
+   <div id="origin"></div>
+</div>
+
+<div class="bottom">
+    <div id="result"></div>
+</div>
+</body>
+</html>

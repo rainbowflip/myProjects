@@ -1,0 +1,87 @@
+window.onload = function(){
+function checkStatus(response) {
+  console.log("checkStatus:"+response.status)
+  if (response.status >= 200 && response.status < 300) {
+    return response;
+  }
+  const error = new Error(response.statusText);
+  error.response = response;
+  throw error;
+}
+function fileupload(fileinfo){
+    let formdata = new FormData();
+    formdata.append("fileinfo",fileinfo)
+    fetch("/seg/cartoon/",{
+    body:formdata,
+    mode:"cors",
+    //credentials:"omit",
+    method:"POST",
+    })
+    .then(res => checkStatus(res))
+    .then(res => res.json())
+    .then(res => {
+         if(res.status != 0){
+             alert("ERROR:"+res.msg)
+         }else{
+             img = res.msg;
+             document.querySelector("#result").style.backgroundImage = "url("+img+")";
+         }
+         console.timeEnd("time_used");
+    }).catch(res=>function(res){console.log(res);alert(res)})
+}     
+function faceswap(fileinfo){
+        console.time("time_used");
+        fetch("/seg/cartoon/",{
+            body:JSON.stringify({
+                "template_id":1,
+                "image_info":fileinfo,
+            }),
+            mode:"cors",
+            //credentials:"omit",
+            method:"POST",
+        })
+        .then(res => checkStatus(res))
+        .then(res => res.json())
+        .then(res => {
+             if(res.status != 0){
+                 alert("ERROR:"+res.msg)
+             }else{
+                 let a = new FileReader();
+		 a.onload=function(){document.querySelector("#result").style.backgroundImage = "url("+a.result+")";};
+                 a.readAsDataURL(res);
+             }
+             console.timeEnd("time_used");
+        }).catch(e=>console.log(e))
+}
+let fr = new FileReader();
+    document.querySelector("#choosefile").onchange = function(){
+        let file = document.querySelector("#choosefile").files[0];
+        fr.readAsDataURL(file);
+        fr.onload = function(){
+           document.querySelector("#origin").style.backgroundImage = "url("+fr.result+")";
+        }
+    }
+
+    document.querySelector("#start").onclick = function(){
+           fr.readAsBinaryString(document.querySelector("#choosefile").files[0]);
+           fr.onload = function(){
+               let fileinfo = fr.result;
+               console.log(fr.result)
+               console.log(fr.result.length)
+               fileupload(fileinfo);
+           }
+    }
+    //let interval;
+    
+    //document.querySelector("#interval").onclick = function(){
+    //       interval = setInterval(function(){
+    //           let fileinfo = document.querySelector("#origin").src;
+    //           faceswap(fileinfo);
+    //       },5000)
+
+    //}
+    //document.querySelector("#stopinterval").onclick = function(){
+    //       clearInterval(interval);
+    //}
+}
+
